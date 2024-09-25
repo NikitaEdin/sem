@@ -1,23 +1,48 @@
 name: A workflow for my Hello World App
-on: push
+
+on:
+  push:
+    branches:
+      - main  # Adjust this if your branch is different
 
 jobs:
   build:
-    name: Hello world action
+    name: Hello World Action
     runs-on: ubuntu-20.04
+
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v2
+
       - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: Compile with Maven
-        run: mvn compile
+
+      # Step to clean, package, and create the JAR with dependencies
+      - name: Build JAR with dependencies using Maven Assembly
+        run: mvn clean package assembly:single -DdescriptorId=jar-with-dependencies
+
+      - name: List target directory (for debugging purposes)
+        run: ls -la target/
+
       - name: Build Docker Image
         run: docker build -t semimage .
-      - name: Run image
+
+      - name: Run Docker Container
         run: docker run --name semcontainer -d semimage
-      - name: view logs
+
+      - name: View Logs
         run: docker logs semcontainer
+
+      - name: Stop and Remove Docker Container
+        run: |
+          docker stop semcontainer
+          docker rm semcontainer
