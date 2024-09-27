@@ -1,6 +1,7 @@
 package com.napier.sem;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 public class App  {
 
@@ -13,10 +14,8 @@ public class App  {
 
         // Connect to database
         a.connect();
-        // Get Employee
-        Employee emp = a.getEmployee(255530);
-        // Display results
-        a.displayEmployee(emp);
+        // Get salaries
+        a.displaySalaries(a.getAllEmployeeSalaries());
 
         // Disconnect from database
         a.disconnect();
@@ -96,6 +95,54 @@ public class App  {
         }
     }
 
+    public ArrayList<Employee> getAllEmployeeSalaries() {
+        try
+        {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary " +
+                            "FROM employees, salaries " +
+                            "WHERE employees.emp_no = salaries.emp_no AND salaries.to_date = '9999-01-01' " +
+                            "ORDER BY employees.emp_no";
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Return new employee if valid.
+            ArrayList<Employee> salaries = new ArrayList<Employee>();
+            while(rset.next()){
+                Employee e = new Employee();
+                e.emp_no = rset.getInt("emp_no");
+                e.first_name = rset.getString("first_name");
+                e.last_name = rset.getString("last_name");
+                e.salary = rset.getInt("salaries.salary");
+                salaries.add(e);
+            }
+            return salaries;
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee salaries");
+            return null;
+        }
+    }
+
+
+    public void displaySalaries(ArrayList<Employee> salaries) {
+        if(salaries == null){
+            System.out.println("No salaries found");
+            return;
+        }
+
+        System.out.println(); //new line
+        for(Employee e : salaries){
+            System.out.println("ID: " +e.emp_no + ", first name: " + e.first_name + ", last name: " + e.last_name + ", salary: " + e.salary );
+        }
+
+    }
     public void displayEmployee(Employee emp) {
         if (emp != null)
         {
