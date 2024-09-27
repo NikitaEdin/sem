@@ -14,8 +14,12 @@ public class App  {
 
         // Connect to database
         a.connect();
-        // Get salaries
-        a.displaySalaries(a.getAllEmployeeSalaries());
+
+
+        // Get all salaries
+        //a.displaySalaries(a.getAllEmployeeSalaries());
+        // Get salaries by department
+        //a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
 
         // Disconnect from database
         a.disconnect();
@@ -96,8 +100,7 @@ public class App  {
     }
 
     public ArrayList<Employee> getAllEmployeeSalaries() {
-        try
-        {
+        try {
             // Create an SQL statement
             Statement stmt = con.createStatement();
             // Create string for SQL statement
@@ -119,6 +122,41 @@ public class App  {
                 e.last_name = rset.getString("last_name");
                 e.salary = rset.getInt("salaries.salary");
                 salaries.add(e);
+            }  return salaries;
+        }  catch (Exception e)  {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee salaries");
+            return null;
+        }
+    }
+
+    public ArrayList<Employee> getEmployeesByDepartment(String department){
+        try {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary, departments.dept_name " +
+                            "FROM employees " +
+                            "JOIN dept_emp ON employees.emp_no = dept_emp.emp_no " +
+                            "JOIN departments ON dept_emp.dept_no = departments.dept_no " +
+                            "JOIN salaries ON employees.emp_no = salaries.emp_no " +
+                            "WHERE departments.dept_name = '" + department + "' " +
+                            "AND salaries.to_date = '9999-01-01';";
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Return new employee if valid.
+            ArrayList<Employee> salaries = new ArrayList<Employee>();
+            while(rset.next()){
+                Employee e = new Employee();
+                e.emp_no = rset.getInt("emp_no");
+                e.first_name = rset.getString("first_name");
+                e.last_name = rset.getString("last_name");
+                e.salary = rset.getInt("salaries.salary");
+                e.dept_name = rset.getString("dept_name");
+                salaries.add(e);
             }
             return salaries;
         }
@@ -130,7 +168,18 @@ public class App  {
         }
     }
 
+    public void displaySalariesByDepartment(ArrayList<Employee> salaries) {
+        if(salaries == null){
+            System.out.println("No salaries found in given department.");
+            return;
+        }
 
+        System.out.println("\nEmployee Salaries in " + salaries.get(0).dept_name + " department:");
+        for(Employee e : salaries){
+            System.out.printf("%-10d %-15s %-15s %-9d %-15s%n",  e.emp_no, e.first_name, e.last_name, e.salary, e.dept_name);
+//            System.out.println("ID: " +e.emp_no + ", first name: " + e.first_name + ", last name: " + e.last_name + ", salary: " + e.salary + ", department: " + e.dept_name );
+        }
+    }
     public void displaySalaries(ArrayList<Employee> salaries) {
         if(salaries == null){
             System.out.println("No salaries found");
@@ -141,7 +190,6 @@ public class App  {
         for(Employee e : salaries){
             System.out.println("ID: " +e.emp_no + ", first name: " + e.first_name + ", last name: " + e.last_name + ", salary: " + e.salary );
         }
-
     }
     public void displayEmployee(Employee emp) {
         if (emp != null)
