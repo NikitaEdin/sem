@@ -18,8 +18,16 @@ public class App  {
 
         // Get all salaries
         //a.displaySalaries(a.getAllEmployeeSalaries());
+
         // Get salaries by department
-        a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
+        //a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
+
+
+        // Get salaries within the same department as the Department Manager(DM)
+        // ("Yuchang Weedman") - DM for Customer Service
+
+        a.displaySalariesByDepartment(a.getEmployeesByDepartmentManager("Yuchang", "Weedman"));
+
 
         // Disconnect from database
         a.disconnect();
@@ -166,9 +174,56 @@ public class App  {
         }
     }
 
+    public ArrayList<Employee> getEmployeesByDepartmentManager(String first_name, String last_name){
+        try {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary, departments.dept_name " +
+                            "FROM employees " +
+                            "JOIN dept_emp ON employees.emp_no = dept_emp.emp_no " +
+                            "JOIN departments ON dept_emp.dept_no = departments.dept_no " +
+                            "JOIN salaries ON employees.emp_no = salaries.emp_no " +
+                            "WHERE dept_emp.dept_no = ( " +
+                            "    SELECT dept_emp.dept_no " +
+                            "    FROM employees " +
+                            "    JOIN dept_emp ON employees.emp_no = dept_emp.emp_no " +
+                            "    WHERE employees.first_name = '" + first_name +"' AND employees.last_name = '" + last_name +"' " + // Parameterized query
+                            "    LIMIT 1 " +
+                            ") " +
+                            "AND salaries.to_date = '9999-01-01';";
+
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Return new employee if valid.
+            ArrayList<Employee> salaries = new ArrayList<Employee>();
+            while(rset.next()){
+                Employee e = new Employee();
+                e.emp_no = rset.getInt("emp_no");
+                e.first_name = rset.getString("first_name");
+                e.last_name = rset.getString("last_name");
+                e.salary = rset.getInt("salaries.salary");
+                e.dept_name = rset.getString("dept_name");
+                salaries.add(e);
+            }
+            if(salaries.isEmpty()){
+                System.out.println("No salaries found or given department manager is not valid");
+            }
+
+            return salaries;
+        }  catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee salaries for department manager " + first_name + " " + last_name + ".");
+            return null;
+        }
+    }
+
     public void displaySalariesByDepartment(ArrayList<Employee> salaries) {
-        if(salaries == null){
-            System.out.println("No salaries found in given department.");
+        if(salaries == null || salaries.isEmpty()){
+            System.out.println("No record to display.");
             return;
         }
 
@@ -179,7 +234,7 @@ public class App  {
         }
     }
     public void displaySalaries(ArrayList<Employee> salaries) {
-        if(salaries == null){
+        if(salaries == null || salaries.isEmpty()){
             System.out.println("No salaries found");
             return;
         }
@@ -190,8 +245,7 @@ public class App  {
         }
     }
     public void displayEmployee(Employee emp) {
-        if (emp != null)
-        {
+        if (emp != null) {
             System.out.println(
                     "ID: " + emp.emp_no + " "
                             + "Name: " + emp.first_name + " "
