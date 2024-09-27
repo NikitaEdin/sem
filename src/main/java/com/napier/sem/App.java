@@ -19,7 +19,7 @@ public class App  {
         // Get all salaries
         //a.displaySalaries(a.getAllEmployeeSalaries());
         // Get salaries by department
-        //a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
+        a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
 
         // Disconnect from database
         a.disconnect();
@@ -159,9 +159,7 @@ public class App  {
                 salaries.add(e);
             }
             return salaries;
-        }
-        catch (Exception e)
-        {
+        }  catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get employee salaries");
             return null;
