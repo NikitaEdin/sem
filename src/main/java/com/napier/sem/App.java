@@ -31,15 +31,15 @@ public class App  {
         //a.displaySalariesByRole(a.getEmployeesByRole("Manager"));
 
         // Add Employee
-        Employee e = new Employee();
-        e.first_name = "John";
-        e.last_name = "Smith";
-        e.salary = 10000;
-        e.title = "Software Engineer"; // software engineer
-        e.dept_name = "Development";
-        e.manager = "Bob Ross";
-        boolean employeeAdded = a.addEmployee(e, "2000-01-01", "2024-09-01", "M");
-        System.out.println(employeeAdded ? "Employee added." : "Failed to add employee.");
+//        Employee e = new Employee();
+//        e.first_name = "John";
+//        e.last_name = "Smith";
+//        e.salary = 10000;
+//        e.title = "Software Engineer"; // software engineer
+//        e.dept_name = "Development";
+//        e.manager = "Bob Ross";
+//        boolean employeeAdded = a.addEmployee(e, "2000-01-01", "2024-09-01", "M");
+//        System.out.println(employeeAdded ? "Employee added." : "Failed to add employee.");
 
 
 
