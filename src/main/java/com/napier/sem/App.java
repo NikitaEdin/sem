@@ -41,6 +41,21 @@ public class App  {
 //        boolean employeeAdded = a.addEmployee(e, "2000-01-01", "2024-09-01", "M");
 //        System.out.println(employeeAdded ? "Employee added." : "Failed to add employee.");
 
+        // Update Employee details
+        System.out.println("Getting employee...");
+        Employee e = a.getEmployee(10003);
+        a.displayEmployee(e);
+        // adjust records
+        e.last_name = "Smith";
+        // push changes
+        boolean updated = a.updateEmployee(e, "1959-12-03", "1986-08-28", "M");
+        if(updated){
+            // verify changes
+            System.out.println("Getting updated employee...");
+            a.displayEmployee(a.getEmployee(10003));
+        }else{
+            System.out.println("Failed to update employee");
+        }
 
 
         // Disconnect from database
@@ -288,9 +303,36 @@ public class App  {
         catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to add given employee.");
+            return false;
         }
         return true;
     }
+
+    public boolean updateEmployee(Employee emp, String birtdate, String hireDate, String gender) {
+        if(emp == null || emp.emp_no <= 0){ return false;}
+
+        try {
+            Statement stmt = con.createStatement();
+            String strUpdate =
+                    "UPDATE employees SET " +
+                            "first_name = '" + emp.first_name + "', " +
+                            "last_name = '" + emp.last_name + "', " +
+                            "birth_date = '" + birtdate + "', " +
+                            "gender = '" + gender + "', " +
+                            "hire_date = '" + hireDate + "' " +
+                            "WHERE emp_no = " + emp.emp_no;
+
+            stmt.executeUpdate(strUpdate);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to update employee details");
+            return false;
+        }
+        System.out.println("Successfully updated employee record.");
+        return true;
+    }
+
+
 
     public void displaySalariesByRole(ArrayList<Employee> salaries) {
         if(!getHasItems(salaries)) return;
