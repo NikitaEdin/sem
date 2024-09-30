@@ -18,8 +18,18 @@ public class App  {
 
         // Get all salaries
         //a.displaySalaries(a.getAllEmployeeSalaries());
+
         // Get salaries by department
         //a.displaySalariesByDepartment(a.getEmployeesByDepartment("Sales"));
+
+
+        // Get salaries within the same department as the Department Manager(DM)
+        // ("Yuchang Weedman") - DM for Customer Service
+        //a.displaySalariesByDepartment(a.getEmployeesByDepartmentManager("Yuchang", "Weedman"));
+
+        // Get salaries by role
+        a.displaySalariesByRole(a.getEmployeesByRole("Manager"));
+
 
         // Disconnect from database
         a.disconnect();
@@ -159,20 +169,110 @@ public class App  {
                 salaries.add(e);
             }
             return salaries;
-        }
-        catch (Exception e)
-        {
+        }  catch (Exception e) {
             System.out.println(e.getMessage());
             System.out.println("Failed to get employee salaries");
             return null;
         }
     }
 
-    public void displaySalariesByDepartment(ArrayList<Employee> salaries) {
-        if(salaries == null){
-            System.out.println("No salaries found in given department.");
-            return;
+    public ArrayList<Employee> getEmployeesByDepartmentManager(String first_name, String last_name){
+        try {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary, departments.dept_name " +
+                            "FROM employees " +
+                            "JOIN dept_emp ON employees.emp_no = dept_emp.emp_no " +
+                            "JOIN departments ON dept_emp.dept_no = departments.dept_no " +
+                            "JOIN salaries ON employees.emp_no = salaries.emp_no " +
+                            "WHERE dept_emp.dept_no = ( " +
+                            "    SELECT dept_emp.dept_no " +
+                            "    FROM employees " +
+                            "    JOIN dept_emp ON employees.emp_no = dept_emp.emp_no " +
+                            "    WHERE employees.first_name = '" + first_name +"' AND employees.last_name = '" + last_name +"' " + // Parameterized query
+                            "    LIMIT 1 " +
+                            ") " +
+                            "AND salaries.to_date = '9999-01-01';";
+
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Return new employee if valid.
+            ArrayList<Employee> salaries = new ArrayList<Employee>();
+            while(rset.next()){
+                Employee e = new Employee();
+                e.emp_no = rset.getInt("emp_no");
+                e.first_name = rset.getString("first_name");
+                e.last_name = rset.getString("last_name");
+                e.salary = rset.getInt("salaries.salary");
+                e.dept_name = rset.getString("dept_name");
+                salaries.add(e);
+            }
+            if(salaries.isEmpty()){
+                System.out.println("No salaries found or given department manager is not valid");
+            }
+
+            return salaries;
+        }  catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee salaries for department manager " + first_name + " " + last_name + ".");
+            return null;
         }
+    }
+
+
+    public ArrayList<Employee> getEmployeesByRole(String role){
+        try {
+            // Create an SQL statement
+            Statement stmt = con.createStatement();
+            // Create string for SQL statement
+            String strSelect =
+                    "SELECT employees.emp_no, employees.first_name, employees.last_name, salaries.salary, titles.title " +
+                            "FROM employees " +
+                            "JOIN salaries ON employees.emp_no = salaries.emp_no " +
+                            "JOIN titles ON employees.emp_no = titles.emp_no " +
+                            "WHERE titles.title = '" + role + "' " +
+                            "AND salaries.to_date = '9999-01-01' " +
+                            "AND titles.to_date = '9999-01-01' "+
+                            ";";
+
+
+            // Execute SQL statement
+            ResultSet rset = stmt.executeQuery(strSelect);
+            // Return new employee if valid.
+            ArrayList<Employee> salaries = new ArrayList<Employee>();
+            while(rset.next()){
+                Employee e = new Employee();
+                e.emp_no = rset.getInt("emp_no");
+                e.first_name = rset.getString("first_name");
+                e.last_name = rset.getString("last_name");
+                e.salary = rset.getInt("salaries.salary");
+                e.title = rset.getString("titles.title");
+                salaries.add(e);
+            }
+            return salaries;
+        }  catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to get employee salaries with role " + role + ".");
+            return null;
+        }
+    }
+
+    public void displaySalariesByRole(ArrayList<Employee> salaries) {
+        if(!getHasItems(salaries)) return;
+
+        System.out.println("\nEmployee Salaries for " + salaries.get(0).title + " role/title:");
+        System.out.printf("%-10s %-15s %-15s %-9s %-15s\n",  "ID", "First Name", "Last Name", "Salary", "Title");
+        for(Employee e : salaries){
+            System.out.printf("%-10d %-15s %-15s %-9d %-15s%n",  e.emp_no, e.first_name, e.last_name, e.salary, e.title);
+        }
+    }
+    public void displaySalariesByDepartment(ArrayList<Employee> salaries) {
+        if(!getHasItems(salaries)) return;
+
 
         System.out.println("\nEmployee Salaries in " + salaries.get(0).dept_name + " department:");
         for(Employee e : salaries){
@@ -181,10 +281,7 @@ public class App  {
         }
     }
     public void displaySalaries(ArrayList<Employee> salaries) {
-        if(salaries == null){
-            System.out.println("No salaries found");
-            return;
-        }
+        if(!getHasItems(salaries)) return;
 
         System.out.println(); //new line
         for(Employee e : salaries){
@@ -192,8 +289,7 @@ public class App  {
         }
     }
     public void displayEmployee(Employee emp) {
-        if (emp != null)
-        {
+        if (emp != null) {
             System.out.println(
                     "ID: " + emp.emp_no + " "
                             + "Name: " + emp.first_name + " "
@@ -205,4 +301,12 @@ public class App  {
         }
     }
 
+
+    private boolean getHasItems(ArrayList<Employee> salaries) {
+        if(salaries == null || salaries.isEmpty()){
+            System.out.println("No record to display.");
+            return false;
+        }
+        return true;
+    }
 }
