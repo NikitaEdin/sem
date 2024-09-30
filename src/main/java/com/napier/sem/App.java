@@ -28,7 +28,19 @@ public class App  {
         //a.displaySalariesByDepartment(a.getEmployeesByDepartmentManager("Yuchang", "Weedman"));
 
         // Get salaries by role
-        a.displaySalariesByRole(a.getEmployeesByRole("Manager"));
+        //a.displaySalariesByRole(a.getEmployeesByRole("Manager"));
+
+        // Add Employee
+        Employee e = new Employee();
+        e.first_name = "John";
+        e.last_name = "Smith";
+        e.salary = 10000;
+        e.title = "Software Engineer"; // software engineer
+        e.dept_name = "Development";
+        e.manager = "Bob Ross";
+        boolean employeeAdded = a.addEmployee(e, "2000-01-01", "2024-09-01", "M");
+        System.out.println(employeeAdded ? "Employee added." : "Failed to add employee.");
+
 
 
         // Disconnect from database
@@ -259,6 +271,25 @@ public class App  {
             System.out.println("Failed to get employee salaries with role " + role + ".");
             return null;
         }
+    }
+
+    public boolean addEmployee(Employee emp, String birtdate, String hireDate, String gender){
+        // Validation check
+        if(emp == null){ return false;}
+
+        try {
+            Statement stmt = con.createStatement();
+            String strUpdate =
+                    "INSERT INTO employees (emp_no, first_name, last_name, birth_date, gender, hire_date) " +
+                            "VALUES (" + emp.emp_no + ", '" + emp.first_name + "', '" + emp.last_name + "', " +
+                            "'"+ birtdate +"', '"+gender+"', '" + hireDate +"')";
+            stmt.execute(strUpdate);
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to add given employee.");
+        }
+        return true;
     }
 
     public void displaySalariesByRole(ArrayList<Employee> salaries) {
