@@ -42,20 +42,35 @@ public class App  {
 //        System.out.println(employeeAdded ? "Employee added." : "Failed to add employee.");
 
         // Update Employee details
+//        System.out.println("Getting employee...");
+//        Employee e = a.getEmployee(10003);
+//        a.displayEmployee(e);
+//        // adjust records
+//        e.last_name = "Smith";
+//        // push changes
+//        boolean updated = a.updateEmployee(e, "1959-12-03", "1986-08-28", "M");
+//        if(updated){
+//            // verify changes
+//            System.out.println("Getting updated employee...");
+//            a.displayEmployee(a.getEmployee(10003));
+//        }else{
+//            System.out.println("Failed to update employee");
+//        }
+
+
+        // Delete employee
         System.out.println("Getting employee...");
         Employee e = a.getEmployee(10003);
         a.displayEmployee(e);
-        // adjust records
-        e.last_name = "Smith";
-        // push changes
-        boolean updated = a.updateEmployee(e, "1959-12-03", "1986-08-28", "M");
-        if(updated){
-            // verify changes
-            System.out.println("Getting updated employee...");
-            a.displayEmployee(a.getEmployee(10003));
-        }else{
-            System.out.println("Failed to update employee");
+
+        boolean employeeDeleted = a.deleteEmployee(10003);
+        System.out.println("Getting employee...");
+        e = a.getEmployee(10003);
+        if(e == null){
+            System.out.println("Employee deleted, verified.");
         }
+
+
 
 
         // Disconnect from database
@@ -287,6 +302,27 @@ public class App  {
             return null;
         }
     }
+
+    public boolean deleteEmployee(int emp_no) {
+        try {
+            Statement stmt = con.createStatement();
+            String strDelete =
+                    "DELETE FROM employees " +
+                            "WHERE emp_no = " + emp_no;
+
+            stmt.executeUpdate(strDelete);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            System.out.println("Failed to delete employee");
+            return false;
+        }
+
+        System.out.println("Employee (" + emp_no + ") deleted successfully.");
+        return true;
+    }
+
 
     public boolean addEmployee(Employee emp, String birtdate, String hireDate, String gender){
         // Validation check
