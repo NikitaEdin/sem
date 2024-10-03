@@ -1,0 +1,23 @@
+@startuml
+
+actor DM as "Department Manager"
+
+rectangle Database
+
+rectangle "HR System" {
+    usecase UC3a as "Enter name"
+    usecase UC3b as "Fetch department
+    from name"
+    usecase UC3 as "Get salaries
+    in department"
+    usecase UCa as "Print salaries"
+
+    DM - UC3a
+    UC3a --> UC3b
+    UC3b --> UC3 : include
+    UC3 ..> UCa : include
+    UC3 - Database
+    UC3b - Database
+}
+
+@enduml
