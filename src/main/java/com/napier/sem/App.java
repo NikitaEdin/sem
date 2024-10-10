@@ -7,7 +7,6 @@ public class App  {
 
     private Connection con = null;
 
-    /** Main entry */
     public static void main(String[] args) {
         // Create new Application
         App a = new App();
@@ -498,18 +497,20 @@ public class App  {
      * Prints a list of employees.
      * @param employees The list of employees to print.
      */
-    public void printSalaries(ArrayList<Employee> employees){
-        if(employees == null || employees.isEmpty()) {
-            System.out.println("No employees to display.");
+    public void printSalaries(ArrayList<Employee> employees)
+    {
+        // Check employees is not null
+        if (employees == null)
+        {
+            System.out.println("No employees");
             return;
         }
-
-
         // Print header
         System.out.println(String.format("%-10s %-15s %-20s %-8s", "Emp No", "First Name", "Last Name", "Salary"));
         // Loop over all employees in the list
-        for (Employee emp : employees)
-        {
+        for (Employee emp : employees) {
+            if(emp == null) continue;
+
             String emp_string =
                     String.format("%-10s %-15s %-20s %-8s",
                             emp.emp_no, emp.first_name, emp.last_name, emp.salary);
@@ -520,14 +521,21 @@ public class App  {
 
     public void displayEmployee(Employee emp) {
         if (emp != null) {
-            System.out.println(
-                    "ID: " + emp.emp_no + " "
-                            + "Name: " + emp.first_name + " "
-                            + emp.last_name + "\n"
-                            + "Title: " + emp.title + "\n"
-                            + "Salary: " + emp.salary + "\n"
-                            + (emp.dept != null ? "Department: " + emp.dept.dept_name : "") + "\n"
-                            + "Manager: " + emp.manager + "\n");
+            if(emp.emp_no == 0 || (emp.first_name.isEmpty() && emp.last_name.isEmpty())) {
+                System.out.println("Invalid Employee object, empty employee record");
+            }else{
+                System.out.println(
+                        "ID: " + emp.emp_no + " "
+                                + "Name: " + emp.first_name + " "
+                                + emp.last_name + "\n"
+                                + "Title: " + emp.title + "\n"
+                                + "Salary: " + emp.salary + "\n"
+                                + (emp.dept != null ? "Department: " + emp.dept.dept_name : "") + "\n"
+                                + (emp.manager != null ? "Manager: " + emp.manager.emp_no : "")
+                );
+            }
+        }else{
+            System.out.println("Null employee, nothing to display.");
         }
     }
 
