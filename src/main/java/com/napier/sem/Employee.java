@@ -19,6 +19,9 @@ public class Employee
      * Employee's last name
      */
     public String last_name;
+    public String birth_date;
+    public String gender;
+    public String hire_date;
 
     /**
      * Employee's job title
@@ -33,10 +36,10 @@ public class Employee
     /**
      * Employee's current department
      */
-    public String dept_name;
+    public Department dept;
 
     /**
      * Employee's manager
      */
-    public String manager;
+    public Employee manager;
 }
