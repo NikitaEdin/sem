@@ -8,23 +8,33 @@ public class App  {
     private Connection con = null;
 
     public static void main(String[] args) {
-        // Create new Application
+        // Create new Application and connect to database
         App a = new App();
 
-        // Connect to database
-        a.connect();
+        if (args.length < 1) {
+            a.connect("localhost:33060", 10000);
+        } else {
+            a.connect(args[0], Integer.parseInt(args[1]));
+        }
+
+        Department dept = a.getDepartment("Development");
+        ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
+
+
+        // Print salary report
+        a.printSalaries(employees);
 
         ////////////////////////// SQL QUERIES //////////////////////////
 
         // Get Department
-        Department dept = a.getDepartment("Sales");
-        if(dept != null) {
-            System.out.println("Dept: " + dept.dept_no + ", name: " + dept.dept_name);
-            System.out.println("Manager name: " + dept.manager.first_name);
-
-            // Salaries in department
-            System.out.println("Salaries in department " + dept.dept_name +": " + a.getSalariesByDepartment(dept).size() + "\n");
-        }
+//        Department dept = a.getDepartment("Sales");
+//        if(dept != null) {
+//            System.out.println("Dept: " + dept.dept_no + ", name: " + dept.dept_name);
+//            System.out.println("Manager name: " + dept.manager.first_name);
+//
+//            // Salaries in department
+//            System.out.println("Salaries in department " + dept.dept_name +": " + a.getSalariesByDepartment(dept).size() + "\n");
+//        }
 
 
         // Get all salaries
@@ -92,29 +102,38 @@ public class App  {
     }
 
     /** Connect to Database driver */
-    public void connect(){
-        try{
+    public void connect(String location, int delay) {
+        try {
             // Load Database driver
             Class.forName("com.mysql.cj.jdbc.Driver");
-        }catch(ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             System.out.println("Could not load SQL driver");
             System.exit(-1);
         }
 
         int retries = 10;
-        for (int i = 0; i < retries; ++i){
+        boolean shouldWait = false;
+        for (int i = 0; i < retries; ++i) {
             System.out.println("Connecting to database...");
-            try{
-                // Wait a bit for db to start
-                Thread.sleep(5000);
+            try {
+                if (shouldWait) {
+                    // Wait a bit for db to start
+                    Thread.sleep(delay);
+                }
+
                 // Connect to database
-                con = DriverManager.getConnection("jdbc:mysql://db:3306/employees?useSSL=false", "root", "example");
+                con = DriverManager.getConnection("jdbc:mysql://" + location
+                                + "/employees?allowPublicKeyRetrieval=true&useSSL=false",
+                        "root", "example");
                 System.out.println("Successfully connected");
                 break;
-            }catch (SQLException sqle){
+            } catch (SQLException sqle) {
                 System.out.println("Failed to connect to database attempt " + i);
                 System.out.println(sqle.getMessage());
-            }catch (InterruptedException ie){
+
+                // Let's wait before attempting to reconnect
+                shouldWait = true;
+            } catch (InterruptedException ie) {
                 System.out.println("Thread interrupted? Should not happen.");
             }
         }
