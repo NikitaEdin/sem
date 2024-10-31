@@ -2,6 +2,7 @@ package com.napier.sem;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.time.LocalDate;
 
 public class App  {
 
@@ -184,61 +185,36 @@ public class App  {
     }
 
     public Employee getEmployee(int ID) {
-        try
-        {
+        Employee emp = null; // Initialize employee as null
+
+        try {
             // Create an SQL statement
             Statement stmt = con.createStatement();
+
             // Create string for SQL statement
-            String strSelect =
-                    "SELECT e.emp_no, e.first_name, e.last_name, " +
-                            "d.dept_no, d.dept_name, " +
-                            "m.emp_no AS manager_emp_no, m.first_name AS manager_first_name, m.last_name AS manager_last_name " +
-                            "FROM employees e " +
-                            "JOIN dept_emp de ON e.emp_no = de.emp_no " +
-                            "JOIN departments d ON de.dept_no = d.dept_no " +
-                            "LEFT JOIN dept_manager dm ON d.dept_no = dm.dept_no " + // Optional join for manager
-                            "LEFT JOIN employees m ON dm.emp_no = m.emp_no " + // Join to get manager details
-                            "WHERE e.emp_no = " + ID;
+            String strSelect = "SELECT emp_no, birth_date, first_name, last_name, gender, hire_date FROM employees WHERE emp_no = " + ID;
+
             // Execute SQL statement
             ResultSet rset = stmt.executeQuery(strSelect);
-            // Check one is returned
-            if (rset.next()) {
 
-                // Create Employee object
-                Employee emp = new Employee();
+            // Check if a result is returned
+            if (rset.next()) {
+                emp = new Employee();
                 emp.emp_no = rset.getInt("emp_no");
+                emp.birth_date = rset.getString("birth_date"); // Assuming birth_date is stored as a string
                 emp.first_name = rset.getString("first_name");
                 emp.last_name = rset.getString("last_name");
-
-                // Set Department information
-                Department dept = new Department();
-                dept.dept_no = rset.getString("dept_no");
-                dept.dept_name = rset.getString("dept_name");
-                emp.dept = dept;
-
-                // Set Manager information if available (using LEFT JOIN)
-                if (rset.getString("manager_emp_no") != null) {
-                    Employee manager = new Employee();
-                    manager.emp_no = rset.getInt("manager_emp_no");
-                    manager.first_name = rset.getString("manager_first_name");
-                    manager.last_name = rset.getString("manager_last_name");
-                    emp.manager = manager;
-                } else {
-                    emp.manager = null; // No manager found
-                }
-                return emp;
-
-            }  else {
-                return null;
+                emp.gender = rset.getString("gender");
+                emp.hire_date = rset.getString("hire_date"); // Assuming hire_date is stored as a string
             }
-        }
-        catch (Exception e)
-        {
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
-            System.out.println("Failed to get employee details");
-            return null;
+            System.out.println("Failed to retrieve employee.");
         }
+
+        return emp; // Return the employee object or null if not found
     }
+
 
     public ArrayList<Employee> getAllEmployeeSalaries() {
         try {
@@ -466,23 +442,54 @@ public class App  {
         return true;
     }
 
-    public void addEmployee(Employee emp)
-    {
-        try
-        {
-            Statement stmt = con.createStatement();
-            String strUpdate =
-                    "INSERT INTO employees (emp_no, first_name, last_name, birth_date, gender, hire_date) " +
-                            "VALUES (" + emp.emp_no + ", '" + emp.first_name + "', '" + emp.last_name + "', " +
-                            "'9999-01-01', 'M', '9999-01-01')";
-            stmt.execute(strUpdate);
-        }
-        catch (Exception e)
-        {
+
+    public void addEmployee(Employee emp) {
+        // Get today's date
+        String today = LocalDate.now().toString(); // Format: YYYY-MM-DD
+
+        // Check birth_date and set to today's date if empty or "-"
+        String birthDate = emp.birth_date != null && !emp.birth_date.isEmpty() && !emp.birth_date.equals("-")
+                ? emp.birth_date
+                : today;
+
+        // Check hire_date and set to today's date if empty or "-"
+        String hireDate = emp.hire_date != null && !emp.hire_date.isEmpty() && !emp.hire_date.equals("-")
+                ? emp.hire_date
+                : today;
+
+        String sql = "INSERT INTO employees (emp_no, birth_date, first_name, last_name, gender, hire_date) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
+            // Set emp_no, which is mandatory
+            pstmt.setInt(1, emp.emp_no);
+
+            // Set birth_date
+            pstmt.setDate(2, java.sql.Date.valueOf(birthDate));
+
+            // Set first_name, which is mandatory
+            pstmt.setString(3, emp.first_name);
+
+            // Set last_name, which is mandatory
+            pstmt.setString(4, emp.last_name);
+
+            // Set gender, or null if not provided
+            pstmt.setString(5, emp.gender);
+
+
+            // Set hire_date
+            pstmt.setDate(6, java.sql.Date.valueOf(hireDate));
+
+            // Execute the insert
+            pstmt.executeUpdate();
+            System.out.println("Employee added successfully.");
+
+        } catch (SQLException e) {
             System.out.println(e.getMessage());
-            System.out.println("Failed to add employee");
         }
     }
+
+
+
 
     public boolean updateEmployee(Employee emp, String birtdate, String hireDate, String gender) {
         if(emp == null || emp.emp_no <= 0){ return false;}

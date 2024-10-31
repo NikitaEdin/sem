@@ -18,20 +18,20 @@ public class Employee
     /**
      * Employee's last name
      */
-    public String last_name;
-    public String birth_date;
-    public String gender;
-    public String hire_date;
+    public String last_name = "";
+    public String birth_date = "";
+    public String gender = "M";
+    public String hire_date = "";
 
     /**
      * Employee's job title
      */
-    public String title;
+    public String title = "";
 
     /**
      * Employee's salary
      */
-    public int salary;
+    public int salary = 0;
 
     /**
      * Employee's current department
