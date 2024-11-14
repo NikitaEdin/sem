@@ -1,109 +1,50 @@
 package com.napier.sem;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.time.LocalDate;
 
+import hello.Greeting;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@SpringBootApplication
+@RestController
 public class App  {
 
-    private Connection con = null;
+    public static Connection con = null;
+
+
 
     public static void main(String[] args) {
         // Create new Application and connect to database
-        App a = new App();
+        App app = new App();
 
         if (args.length < 1) {
-            a.connect("localhost:33060", 10000);
+            connect("localhost:33060", 5000);
         } else {
-            a.connect(args[0], Integer.parseInt(args[1]));
+            connect(args[0], Integer.parseInt(args[1]));
         }
 
-        Department dept = a.getDepartment("Development");
-        ArrayList<Employee> employees = a.getSalariesByDepartment(dept);
+//        ArrayList<Employee> employees = app.getAllEmployeeSalaries();
+//        app.outputEmployees(employees, "ManagerSalaries.md");
 
-
-        // Print salary report
-        a.printSalaries(employees);
-
-        ////////////////////////// SQL QUERIES //////////////////////////
-
-        // Get Department
-//        Department dept = a.getDepartment("Sales");
-//        if(dept != null) {
-//            System.out.println("Dept: " + dept.dept_no + ", name: " + dept.dept_name);
-//            System.out.println("Manager name: " + dept.manager.first_name);
-//
-//            // Salaries in department
-//            System.out.println("Salaries in department " + dept.dept_name +": " + a.getSalariesByDepartment(dept).size() + "\n");
-//        }
-
-
-        // Get all salaries
-//        System.out.println("All salaries: " + a.getAllEmployeeSalaries().size() + "\n");
-
-        // Get employees by department
-//        System.out.println("Employees in department Development: " + a.getEmployeesByDepartment("Development").size() + "\n");
-
-
-        // Get salaries within the same department as the Department Manager(DM) -  ("Yuchang Weedman") - DM for Customer Service
-//        System.out.println("All salaries in the department of Yuchang Weedman: " + a.getEmployeesByDepartmentManager("Yuchang", "Weedman").size() + "\n");
-
-        // Get salaries by role
-//        System.out.println("Salaries by role Manager: " + a.getEmployeesByRole("Manager").size() + "\n");
-
-        // Add Employee
-//        System.out.println("Adding new employee...");
-//        Employee e = new Employee();
-//        e.emp_no = 101;
-//        e.first_name = "John";
-//        e.last_name = "Smith";
-//        e.salary = 10000;
-//        e.title = "Software Engineer"; // software engineer
-//        boolean employeeAdded = a.addEmployee(e, "2000-01-01", "2024-09-01", "M");
-//        System.out.println((employeeAdded ? "Employee added." : "Failed to add employee.")   + "\n" );
-
-        // Update Employee details
-//        System.out.println("Getting employee...");
-//        Employee updateEmployee = a.getEmployee(10003);
-//        if(updateEmployee != null){
-//            a.displayEmployee(updateEmployee);
-//            // adjust records
-//            updateEmployee.last_name = "Bob";
-//            // push changes
-//            boolean updated = a.updateEmployee(updateEmployee, "1959-12-03", "1986-08-28", "M");
-//            if(updated){
-//                // verify changes
-//                System.out.println("Getting updated employee...\n" );
-//                a.displayEmployee(a.getEmployee(10003));
-//            }else{
-//                System.out.println("Failed to update employee\n");
-//            }
-//        }else{
-//            System.out.println("Failed to get employee.");
-//        }
-
-
-        // Delete employee
-//        System.out.println("Getting employee...");
-//        Employee deleteEmployee = a.getEmployee(10003);
-//        a.displayEmployee(deleteEmployee);
-//
-//        boolean employeeDeleted = a.deleteEmployee(10003);
-//        System.out.println("Getting employee...");
-//        deleteEmployee = a.getEmployee(10003);
-//        if(deleteEmployee == null){
-//            System.out.println("Employee deleted, verified.\n");
-//        }else{
-//            System.out.println("Failed to delete employee.\n");
-//        }
+        SpringApplication.run(App.class, args);
 
 
         // Disconnect from database
-        a.disconnect();
+        //disconnect();
     }
 
     /** Connect to Database driver */
-    public void connect(String location, int delay) {
+    public static void connect(String location, int delay) {
         try {
             // Load Database driver
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -141,7 +82,7 @@ public class App  {
     }
 
     /** Disconnect SQL driver */
-    public void disconnect(){
+    public static void disconnect(){
         if(con != null){
             try{
                 // Close connection
@@ -153,8 +94,7 @@ public class App  {
     }
 
     public Employee getEmployee_simple(int ID) {
-        try
-        {
+        try {
             // Create an SQL statement
             Statement stmt = con.createStatement();
             // Create string for SQL statement
@@ -183,6 +123,41 @@ public class App  {
             return null;
         }
     }
+
+
+
+    @RequestMapping("employee")
+    public Employee REST_getEmployee(@RequestParam(value = "id") String ID) {
+        return getEmployee_simple(Integer.parseInt(ID));
+    }
+    // Get all salaries
+    @RequestMapping("salaries")
+    public ArrayList<Employee> REST_getAllSalaries() {
+        return getAllEmployeeSalaries();
+    }
+
+    // Get salaries by title
+    @RequestMapping("salaries_title")
+    public ArrayList<Employee> REST_getSalariesByTitle(@RequestParam(value = "title") String title) {
+        return getEmployeesByRole(title);
+    }
+
+    // Get department by department name
+    @RequestMapping("department")
+    public ArrayList<Employee> REST_getDepartment(@RequestParam(value = "dept") String dept) {
+        return getEmployeesByDepartment(dept);
+    }
+
+    // Get salaries by department
+    @RequestMapping("salaries_department")
+    public ArrayList<Employee> REST_getSalariesByDepartment(@RequestParam(value = "dept") String dept) {
+        var department = getDepartment(dept);
+        return getSalariesByDepartment(department);
+    }
+
+
+
+
 
     public Employee getEmployee(int ID) {
         Employee emp = null; // Initialize employee as null
@@ -667,6 +642,40 @@ public class App  {
         }
     }
 
+
+    /**
+     * Outputs to Markdown
+     *
+     * @param employees
+     */
+    public void outputEmployees(ArrayList<Employee> employees, String filename) {
+        // Check employees is not null
+        if (employees == null) {
+            System.out.println("No employees");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        // Print header
+        sb.append("| Emp No | First Name | Last Name | Title | Salary | Department |                    Manager |\r\n");
+        sb.append("| --- | --- | --- | --- | --- | --- | --- |\r\n");
+        // Loop over all employees in the list
+        for (Employee emp : employees) {
+            if (emp == null) continue;
+            sb.append("| " + emp.emp_no + " | " +
+                    emp.first_name + " | " + emp.last_name + " | " +
+                    emp.title + " | " + emp.salary + " | "
+                     + emp.manager + " |\r\n");
+        }
+        try {
+            new File("./reports/").mkdir();
+            BufferedWriter writer = new BufferedWriter(new FileWriter(new File("./reports/" + filename)));
+            writer.write(sb.toString());
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private boolean getHasItems(ArrayList<Employee> salaries) {
         if(salaries == null || salaries.isEmpty()){
